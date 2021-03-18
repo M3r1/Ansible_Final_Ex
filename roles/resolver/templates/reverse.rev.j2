@@ -1,0 +1,15 @@
+$TTL 2H
+@ IN SOA {{ DNS_INV_NAME }}. admin.{{ DOMAIN_NAME }}. (                                            
+                                            2020011800 ;Serial
+                                            3600 ;Refresh
+                                            1800 ;Retry
+                                            604800 ;Expire
+                                            86400 ;Minimum TTL
+)
+;Name Server Information
+@ IN NS {{ DNS_INV_NAME }}.
+
+;PTR Record IP address to Hostname
+{% for host in ansible_play_hosts %}
+{{ hostvars[host]['ansible_env'].SSH_CONNECTION.split(' ')[2].split('.')[3] }} IN PTR {{ hostvars[host]['ansible_facts']['hostname'] }}.{{ DOMAIN_NAME }}.
+{% endfor %}

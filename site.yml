@@ -1,0 +1,6 @@
+---
+- hosts: all
+  tasks:
+    - name: Set up dns server with all inventory hosts
+      include_role:
+        name: resolver

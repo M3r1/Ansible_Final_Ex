@@ -1,0 +1,36 @@
+---
+- block: 
+  - block:
+    - name: Install named service
+      dnf:
+        name:
+        - epel-release
+        - bind
+        - bind-utils
+
+    - name: Configure names service
+      template:
+        src: named.conf.j2
+        dest: /etc/named.conf
+
+    - name: Configure forward zone
+      template:
+        src: forward.db.j2
+        dest: /var/named/{{ DOMAIN_NAME }}.db
+  
+    - name: Configure reverse zone
+      template:
+        src: reverse.rev.j2
+        dest: /var/named/{{ DOMAIN_NAME }}.rev
+
+    - name: Enable and restart named service
+      ansible.builtin.systemd:
+        state: restarted
+        enabled: yes
+        name: named    
+    when: inventory_hostname == DNS_INV_NAME
+  
+  - name: Edit resolve.conf
+    import_tasks: resolve.yml
+
+  become: yes
