@@ -1,0 +1,75 @@
+#!/bin/bash
+
+# Handle all flags, go on when the first argument is proccesed
+
+while test $# -gt 0; do
+    case $1 in
+        -*)	 	
+            case $1 in
+                -u)
+		    shift
+	            SSH_USER=$1
+		    shift
+		;;
+		*)
+	            echo "Invalid flag $1"
+		    exit 1
+		;;
+             esac                		
+        ;;
+        *)
+	    break
+        ;;
+    esac
+done
+
+# Fail the script if no ssh user specified
+
+if [ -z $SSH_USER ]
+then
+    echo "Please specify user"
+    exit 1
+fi
+
+ssh-keygen -t rsa
+
+echo "SSH PASSWORD: "
+read SSH_PASSWD
+
+while test $# -gt 0; do
+
+    PREVIFS=$IFS
+    IFS=$' '    
+    IPS=($(sed -n -e 's/^.*ansible_host=//p' $1))
+    IFS=$PREVIFS
+
+    for line in $IPS; do
+
+        # Add inventory hosts to hosts file
+
+        ssh-keyscan -t rsa,dsa $line 2>&1 | sort -u ~/.ssh/known_hosts > ~/.ssh/tmp_hosts
+        mv ~/.ssh/tmp_hosts ~/.ssh/known_hosts
+    done
+    
+    # Create a copy of the deployer user on the inventory machines   
+
+    USER_PASSWD=$(sudo cat /etc/shadow | grep $USER | awk -F":" '{ print $2 }')    
+    ansible all -i $1 -m ansible.builtin.user -a "name=$USER password=$USER_PASSWD" -u $SSH_USER -e "ansible_password=$SSH_PASSWD" --become
+
+    # Give the user sudo permissions
+
+    ansible all -i $1 -m ansible.builtin.file -a "path=/etc/sudoers.d state=directory mode='0755'" -u $SSH_USER -e "ansible_password=$SSH_PASSWD" --become
+    ansible all -i $1 -m ansible.builtin.file -a "path=/etc/sudoers.d/$USER state=file mode='0660'" -u $SSH_USER -e "ansible_password=$SSH_PASSWD" --become
+    ansible all -i $1 -m ansible.builtin.lineinfile -a "path=/etc/sudoers.d/$USER regexp='^gil' line='$USER ALL=(ALL) NOPASSWD: ALL'" -u $SSH_USER -e "ansible_password=$SSH_PASSWD" --become
+
+    # Set ssh keypairs from user to inventory hosts, then disable password authentication and root login
+    
+    for line in $IPS; do
+        sshpass -p $SSH_PASSWD ssh-copy-id $USER@$line
+    done
+    ansible all -i $1 -m ansible.builtin.lineinfile -a "path=/etc/ssh/sshd_config regexp='^PermitRootLogin' line='PermitRootLogin no'" -u $SSH_USER -e "ansible_password=$SSH_PASSWD" --become
+    ansible all -i $1 -m ansible.builtin.lineinfile -a "path=/etc/ssh/sshd_config regexp='^PasswordAuthentication' line='PasswordAuthentication no'" -u $SSH_USER -e "ansible_password=$SSH_PASSWD" --become
+    ansible all -i $1 -m ansible.builtin.systemd -a "name=sshd state=restarted" -u $SSH_USER -e "ansible_password=$SSH_PASSWD" --become
+    
+    shift
+done

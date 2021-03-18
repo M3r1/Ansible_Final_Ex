@@ -1,0 +1,10 @@
+names.com ansible_host=192.168.0.50
+ca.com ansible_host=192.168.0.40
+
+[webservers]
+catsfood.com ansible_host=192.168.0.60
+bighead.com ansible_host=192.168.0.70
+
+[proxies]
+haproxy_one.com ansible_host=192.168.0.20
+haproxy_two.com ansible_host=192.168.0.30
