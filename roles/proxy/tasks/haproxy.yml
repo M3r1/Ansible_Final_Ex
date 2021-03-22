@@ -1,0 +1,44 @@
+---
+- block:
+  - name: Install haproxy
+    dnf:
+      name:
+      - haproxy
+
+  - name: Configure haprxoy
+    template:
+      src: haproxy.cfg.j2
+      dest: /etc/haproxy/haproxy.cfg
+  
+  - name: Edit syslog conf
+    block:
+      - name: Load imudp module
+        lineinfile:
+          path: /etc/rsyslog.conf
+          regexp: '^module(load="imudp")'
+          line: module(load="imudp")
+      
+      - name: Load imudp module
+        lineinfile:
+          path: /etc/rsyslog.conf
+          regexp: '^input(type="imudp" port="514")'
+          line: input(type="imudp" port="514")
+  
+      - name: Configure rsyslog
+        template:
+          src: haproxy.conf.j2
+          dest: /etc/rsyslog.d/haproxy.conf
+
+  - name: Start rsyslog service
+    systemd:
+      state: restarted
+      enabled: yes
+      name: rsyslog
+
+  - name: Start haproxy service
+    systemd:
+      state: restarted
+      enabled: yes
+      name: haproxy
+
+  become: yes

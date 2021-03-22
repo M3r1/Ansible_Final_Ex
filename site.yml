@@ -1,6 +1,36 @@
 ---
-- hosts: all
+- hosts: names.com
   tasks:
     - name: Set up dns server with all inventory hosts
       include_role:
         name: resolver
+  
+- hosts: ca.com
+  tasks:
+    - name: Generate ca certificate
+      include_role:
+        name: ca
+
+- hosts: webservers
+  tasks: 
+    - name: Set up httpd ground on webservers
+      include_role:
+        name: webserver
+
+- hosts: bighead.com
+  tasks:
+    - name: Set up bighead application
+      include_role:
+        name: bighead
+
+- hosts: catsfood.com
+  tasks:
+    - name: Set up catsfood application
+      include_role:
+        name: catsfood
+
+- hosts: proxies
+  tasks:
+    - name: Set up keepalived cluster
+      include_role:
+        name: proxy

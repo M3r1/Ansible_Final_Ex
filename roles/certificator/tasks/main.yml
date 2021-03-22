@@ -1,2 +1,6 @@
 ---
-# tasks file for certificator
+- import_tasks: install.yml
+
+- import_tasks: csr.yml
+
+- import_tasks: cert.yml

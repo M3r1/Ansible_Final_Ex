@@ -1,0 +1,53 @@
+global
+    log         127.0.0.1 local2
+
+    chroot      /var/lib/haproxy
+    pidfile     /var/run/haproxy.pid
+    maxconn     4000
+    user        haproxy
+    group       haproxy
+    daemon
+
+    # turn on stats unix socket
+    stats socket /var/lib/haproxy/stats
+
+    # utilize system-wide crypto-policies
+    ssl-default-bind-ciphers PROFILE=SYSTEM
+    ssl-default-server-ciphers PROFILE=SYSTEM
+
+defaults
+    mode                    http
+    log                     global
+    option                  httplog
+    option                  dontlognull
+    option http-server-close
+    option forwardfor       except 127.0.0.0/8
+    option                  redispatch
+    retries                 3
+    timeout http-request    10s
+    timeout queue           1m
+    timeout connect         10s
+    timeout client          1m
+    timeout server          1m
+    timeout http-keep-alive 10s
+    timeout check           10s
+    maxconn                 3000
+
+frontend main
+    bind {{ CLUSTER_IP }}:443 ssl crt /etc/pki/tls/private/server.pem
+
+    acl bighead_acl path -i -m beg /bighead/
+    use_backend bighead if bighead_acl
+
+    acl catsfood_acl path -i -m beg /catsfood/
+    use_backend catsfood if catsfood_acl
+
+backend bighead
+    reqrep ^([^\ :]*)\ /bighead/(.*) \1\ /\2
+    balance     roundrobin
+    server      bighead-master        {{ BIGHEAD_IP }}:443        check ssl verify none
+
+backend catsfood
+    reqrep ^([^\ :]*)\ /catsfood/(.*) \1\ /\2
+    balance     roundrobin
+    server      bighead-master        {{ CATSFOOD_IP }}:443        check ssl verify none

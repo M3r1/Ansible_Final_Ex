@@ -10,10 +10,7 @@ $TTL 2H
 ;Name Server Information
 @ IN NS {{ DNS_INV_NAME }}.
 
-;A Record for the following Host names
-{% for host in ansible_play_hosts %}
-{{ hostvars[host]['ansible_facts']['hostname'] }} IN A {{ hostvars[host]['ansible_env'].SSH_CONNECTION.split(' ')[2] }}
-{% endfor %}
+{{ DNS_INV_NAME | replace('.' + DOMAIN_NAME, '') }} IN A {{ hostvars[DNS_INV_NAME]['ansible_env'].SSH_CONNECTION.split(' ')[2] }} 
 
 ;CNAME Record
 ftp  IN   CNAME www.{{  DOMAIN_NAME }}.

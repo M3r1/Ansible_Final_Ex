@@ -1,0 +1,11 @@
+---
+- block:
+  - name: Copy tmp ca cert to server
+    copy:
+      src: /tmp/ssl_nodes/{{ CA_INV_NAME }}/server.crt
+      dest: /etc/pki/ca-trust/source/anchors/ca.crt 
+  
+  - name:
+    shell:
+      cmd: cat /etc/pki/ca-trust/source/anchors/ca.crt >> /etc/pki/tls/certs/ca-bundle.crt
+  become: yes

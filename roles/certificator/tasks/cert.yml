@@ -1,0 +1,45 @@
+---
+- block:
+    - block:
+      - name: Generate keys and certs dir
+        file:
+          path: /root/ssl/{{ inventory_hostname }}
+          state: directory
+          mode: '0750'
+
+      - name: Transfer inventory_hostname csr to ca
+        copy:
+          src: /tmp/ssl_nodes/{{ inventory_hostname }}/server.csr
+          dest: /root/ssl/{{ inventory_hostname }}/server.csr
+
+      - name: Gen certificate
+        openssl_certificate:
+          path: /root/ssl/{{ inventory_hostname }}/server.crt
+          csr_path: /root/ssl/{{ inventory_hostname }}/server.csr
+          ownca_path: /root/ssl/server.crt
+          ownca_privatekey_path: /root/ssl/pkey.pem
+          provider: ownca
+
+      - name: Fetch host certificate
+        fetch:
+          src: /root/ssl/{{ inventory_hostname }}/server.crt
+          dest: /tmp/ssl_nodes/{{ inventory_hostname }}/
+          flat: yes
+         
+      - name: Delete csr and cert from ca
+        file:
+          path: /root/ssl/{{ inventory_hostname }}
+          state: absent
+      delegate_to: "{{ CA_INV_NAME }}"
+    
+    - name: Transfer inventory_hostname cert to server
+      copy:
+        src: /tmp/ssl_nodes/{{ inventory_hostname }}/server.crt
+        dest: "{{ SERVER_CERT_LOCATION }}"
+
+    - name: Delete csr's from master
+      local_action:
+        module: file
+        path: /tmp/ssl_nodes/{{ inventory_hostname }}/server.csr
+        state: absent
+  become: yes

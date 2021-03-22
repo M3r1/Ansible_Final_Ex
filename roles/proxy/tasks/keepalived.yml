@@ -1,0 +1,17 @@
+---
+- block:
+  - name: Non local bind ip 
+    shell:
+      cmd: echo "net.ipv4.ip_nonlocal_bind = 1" >> /etc/sysctl.conf && sysctl -p
+
+  - name: Config keepalived
+    template:
+      src: keepalived.conf.j2
+      dest: /etc/keepalived/keepalived.conf
+   
+  - name: Start keepalived service
+    systemd:
+      state: restarted
+      enabled: yes
+      name: keepalived
+  become: yes

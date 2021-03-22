@@ -1,0 +1,28 @@
+---
+- import_tasks: install.yml
+
+- block:
+  - name: Generate keys and certs dir
+    file:
+      path: /root/ssl
+      state: directory
+      mode: '0750'
+
+  - name: Generate cert for ca
+    shell:
+      cmd: openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 -subj "/C=IL/CN=ca.com" -keyout /root/ssl/pkey.pem -out /root/ssl/server.crt
+
+  - name: Fetch host certificate
+    fetch:
+      src: /root/ssl/server.crt
+      dest: /tmp/ssl_nodes/{{ inventory_hostname }}/
+      flat: yes
+
+  - name: Add server to domain
+    include_role:
+      name: domain
+
+  - name: Add the cluster dns
+    include_role:
+      name: name_entry
+  become: yes

@@ -10,6 +10,4 @@ $TTL 2H
 @ IN NS {{ DNS_INV_NAME }}.
 
 ;PTR Record IP address to Hostname
-{% for host in ansible_play_hosts %}
-{{ hostvars[host]['ansible_env'].SSH_CONNECTION.split(' ')[2].split('.')[3] }} IN PTR {{ hostvars[host]['ansible_facts']['hostname'] }}.{{ DOMAIN_NAME }}.
-{% endfor %}
+{{ hostvars[DNS_INV_NAME]['ansible_env'].SSH_CONNECTION.split(' ')[2].split('.')[3] }} IN PTR {{ hostvars[DNS_INV_NAME]['ansible_facts']['hostname'] }}.{{ DOMAIN_NAME }}.

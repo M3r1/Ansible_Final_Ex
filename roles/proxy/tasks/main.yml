@@ -1,0 +1,21 @@
+---
+- name: Install haproxy
+  dnf:
+    name:
+    - haproxy
+    - keepalived
+  become: yes
+  
+- import_tasks: ssl.yml
+
+- import_tasks: haproxy.yml
+  
+- import_tasks: keepalived.yml
+
+- name: Add server to domain
+  include_role:
+    name: domain
+  
+- name: Add the cluster dns
+  include_role:
+    name: name_entry

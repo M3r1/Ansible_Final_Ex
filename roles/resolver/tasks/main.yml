@@ -24,13 +24,9 @@
         dest: /var/named/{{ DOMAIN_NAME }}.rev
 
     - name: Enable and restart named service
-      ansible.builtin.systemd:
+      systemd:
         state: restarted
         enabled: yes
         name: named    
     when: inventory_hostname == DNS_INV_NAME
-  
-  - name: Edit resolve.conf
-    import_tasks: resolve.yml
-
   become: yes

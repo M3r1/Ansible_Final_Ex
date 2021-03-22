@@ -1,0 +1,22 @@
+---
+- block:
+  - name: Install openssl and python
+    dnf:
+      name:
+      - epel-release
+      - openssl
+      - python38
+
+  - name: upgrade pip
+    pip:
+      name:
+      - pip
+      extra_args: --upgrade
+
+  - name: Pip install cryptography and pyopenssl
+    pip:
+      name:
+      - setuptools_rust
+      - pyopenssl
+      - cryptography
+  become: yes

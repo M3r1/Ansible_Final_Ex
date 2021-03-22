@@ -1,0 +1,14 @@
+- block:
+  - name: Add option rotate to resolve.conf
+    lineinfile:
+      path: /etc/resolv.conf
+      regexp: '^options rotate'
+      insertbefore: '^nameserver'
+      line: 'options rotate'
+
+  - name: Add nameserver to all hosts
+    lineinfile:
+      path: /etc/resolv.conf
+      regexp: '^nameserver {{ hostvars[DNS_INV_NAME]["ansible_env"].SSH_CONNECTION.split(" ")[2] }}'
+      line: 'nameserver {{ hostvars[DNS_INV_NAME]["ansible_env"].SSH_CONNECTION.split(" ")[2] }}'
+  become: yes
