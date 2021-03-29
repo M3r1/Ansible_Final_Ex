@@ -1,6 +1,11 @@
 ---
 - import_tasks: install.yml
 
+- name: Check if certificate expired
+  shell: if [[ ! -f "/root/ssl/server.crt" || $(date --utc --date="$(openssl x509 -enddate -noout -in /root/ssl/server.crt | sed -n -e 's/.*=//p')" +"%Y%m%d") < $(date --utc --date="$(date) -5 day" +"%Y%m%d") ]]; then echo "y"; fi
+  register: expired
+  become: yes
+
 - block:
   - name: Generate keys and certs dir
     file:
@@ -10,19 +15,13 @@
 
   - name: Generate cert for ca
     shell:
-      cmd: openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 -subj "/C=IL/CN=ca.com" -keyout /root/ssl/pkey.pem -out /root/ssl/server.crt
+      cmd: openssl req -x509 -new -nodes -subj "/C=IL/CN=ca.com" -newkey rsa:4096 -keyout /root/ssl/ca.key -sha256 -days 1024 -out /root/ssl/server.crt
+  when: expired.stdout == "y"
+  become: yes
 
-  - name: Fetch host certificate
-    fetch:
-      src: /root/ssl/server.crt
-      dest: /tmp/ssl_nodes/{{ inventory_hostname }}/
-      flat: yes
-
-  - name: Add server to domain
-    include_role:
-      name: domain
-
-  - name: Add the cluster dns
-    include_role:
-      name: name_entry
+- name: Fetch host certificate
+  fetch:
+    src: /root/ssl/server.crt
+    dest: /tmp/ssl_nodes/{{ inventory_hostname }}/
+    flat: yes
   become: yes

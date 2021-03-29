@@ -1,5 +1,7 @@
 ---
+MASTER_NAME: haproxyone.com
 BIGHEAD_IP: 192.168.0.70
 CATSFOOD_IP: 192.168.0.60
-CLUSTER_IP: 192.168.0.25
-MASTER_NAME: haproxyone.com
+DOMAINS:
+  - bighead.com
+  - catsfood.com

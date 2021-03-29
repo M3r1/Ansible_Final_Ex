@@ -2,17 +2,17 @@
 - block:
   - name: Generate a private key
     openssl_privatekey:
-      path: "{{ SERVER_KEY_LOCATION }}"
+      path: "{{ SERVER_KEY_LOCATION }}{{ item }}/server.key"
   
   - name: Generate the csr
     openssl_csr:
-      path: /etc/pki/tls/private/server.csr
-      privatekey_path: "{{ SERVER_KEY_LOCATION }}"
-      common_name: "{{ inventory_hostname }}"
+      path: /etc/pki/tls/private/{{ item }}/server.csr
+      privatekey_path: "{{ SERVER_KEY_LOCATION }}{{ item }}/server.key"
+      common_name: "{{ item }}"
 
   - name: Fetch server csr
     fetch:
-      src: /etc/pki/tls/private/server.csr
-      dest: /tmp/ssl_nodes/{{ inventory_hostname }}/
+      src: /etc/pki/tls/private/{{ item }}/server.csr
+      dest: /tmp/ssl_nodes/{{ item }}/
       flat: yes
   become: yes

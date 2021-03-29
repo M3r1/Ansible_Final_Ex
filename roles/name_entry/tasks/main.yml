@@ -10,5 +10,6 @@
     lineinfile:
       path: /etc/resolv.conf
       regexp: '^nameserver {{ hostvars[DNS_INV_NAME]["ansible_env"].SSH_CONNECTION.split(" ")[2] }}'
+      insertbefore: '^nameserver'
       line: 'nameserver {{ hostvars[DNS_INV_NAME]["ansible_env"].SSH_CONNECTION.split(" ")[2] }}'
   become: yes

@@ -33,21 +33,19 @@ defaults
     timeout check           10s
     maxconn                 3000
 
+
+
 frontend main
-    bind {{ CLUSTER_IP }}:443 ssl crt /etc/pki/tls/private/server.pem
+    bind {{ CLUSTER_IP }}:443 ssl crt /etc/pki/tls/private/bighead.com/server.pem crt /etc/pki/tls/private/catsfood.com/server.pem
 
-    acl bighead_acl path -i -m beg /bighead/
-    use_backend bighead if bighead_acl
+    use_backend bighead if { ssl_fc_sni bighead.com }
 
-    acl catsfood_acl path -i -m beg /catsfood/
-    use_backend catsfood if catsfood_acl
+    use_backend catsfood if { ssl_fc_sni catsfood.com }
 
 backend bighead
-    reqrep ^([^\ :]*)\ /bighead/(.*) \1\ /\2
     balance     roundrobin
     server      bighead-master        {{ BIGHEAD_IP }}:443        check ssl verify none
 
 backend catsfood
-    reqrep ^([^\ :]*)\ /catsfood/(.*) \1\ /\2
     balance     roundrobin
     server      bighead-master        {{ CATSFOOD_IP }}:443        check ssl verify none

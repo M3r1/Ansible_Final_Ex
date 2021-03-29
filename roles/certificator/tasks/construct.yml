@@ -1,0 +1,25 @@
+---
+- name: Check if certificate expired
+  shell: if [[ ! -f "{{ SERVER_CERT_LOCATION }}{{ item }}/server.crt" || $(date --utc --date="$(openssl x509 -enddate -noout -in {{ SERVER_CERT_LOCATION }}{{ item }}/server.crt | sed -n -e 's/.*=//p')" +"%Y%m%d") < $(date --utc --date="$(date) -5 day" +"%Y%m%d") ]]; then echo "y"; fi
+  register: expired
+  become: yes
+
+- block:
+  - block:
+    - name: Generate keys dir
+      file:
+        path: "{{ SERVER_KEY_LOCATION }}{{ item }}"
+        state: directory
+        mode: '0750'
+
+    - name: Generate cert dir
+      file:
+        path: "{{ SERVER_CERT_LOCATION }}{{ item }}"
+        state: directory
+        mode: '0750'
+    become: yes
+
+  - import_tasks: csr.yml
+
+  - import_tasks: cert.yml
+  when: expired.stdout == "y" or hostvars[CA_INV_NAME]['expired'].stdout == "y"

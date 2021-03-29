@@ -12,5 +12,8 @@ $TTL 2H
 
 {{ DNS_INV_NAME | replace('.' + DOMAIN_NAME, '') }} IN A {{ hostvars[DNS_INV_NAME]['ansible_env'].SSH_CONNECTION.split(' ')[2] }} 
 
+bighead.com IN A {{ CLUSTER_IP }}
+catsfood.com IN A {{ CLUSTER_IP }}
+
 ;CNAME Record
 ftp  IN   CNAME www.{{  DOMAIN_NAME }}.

@@ -4,8 +4,13 @@
     copy:
       src: /tmp/ssl_nodes/{{ CA_INV_NAME }}/server.crt
       dest: /etc/pki/ca-trust/source/anchors/ca.crt 
-  
-  - name:
+ 
+  - name: reinstall ca-certificates
+    shell: 
+      cmd: dnf reinstall -y ca-certificates
+
+  - name: Update ca trust
     shell:
-      cmd: cat /etc/pki/ca-trust/source/anchors/ca.crt >> /etc/pki/tls/certs/ca-bundle.crt
+      cmd: update-ca-trust force-enable && update-ca-trust
+  when: hostvars[CA_INV_NAME]['expired'].stdout == "y"
   become: yes

@@ -4,5 +4,6 @@ CA_INV_NAME: ca.com
 SUBNET_ADDR: 192.168.0.0/24
 DOMAIN_NAME: com
 REVERSE_SUBNET_ADDR: 0.168.192
-SERVER_KEY_LOCATION: /etc/pki/tls/private/pkey.pem
-SERVER_CERT_LOCATION: /etc/pki/tls/certs/server.crt
+SERVER_KEY_LOCATION: /etc/pki/tls/private/
+SERVER_CERT_LOCATION: /etc/pki/tls/certs/
+CLUSTER_IP: 192.168.0.25

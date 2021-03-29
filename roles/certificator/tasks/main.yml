@@ -1,6 +1,5 @@
 ---
 - import_tasks: install.yml
 
-- import_tasks: csr.yml
-
-- import_tasks: cert.yml
+- include_tasks: construct.yml
+  with_items: "{{ DOMAINS | default(inventory_hostname) }}"

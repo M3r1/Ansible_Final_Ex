@@ -17,25 +17,14 @@
       src: ssl.conf.j2
       dest: /etc/httpd/conf.d/ssl.conf
 
-  - name: Generate a certificate for the server
-    include_role:
-      name: certificator
-
-  - name: Trust cluster ca
-    include_role:
-      name: trust_ca
-
   - name: Enable and start service
     systemd:
       state: restarted
       enabled: yes
       name: httpd
 
-  - name: Add server to domain
-    include_role:
-      name: domain
-
-  - name: Include the cluster dns
-    include_role:
-      name: name_entry
+  - name: Set up index html
+    template:
+      src: "{{ INDEX }}"
+      dest: /var/www/html/index.html
   become: yes

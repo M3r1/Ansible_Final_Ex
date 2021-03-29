@@ -1,40 +1,28 @@
 ---
 - name: Genreate certificate for master
   block:
-    - name: Gen key, csr and a cert 
-      include_role:
-        name: certificator
-     
     - name: Create a pem file
       shell:
-        cmd: cat "{{ SERVER_KEY_LOCATION }}" "{{ SERVER_CERT_LOCATION }}" > /etc/pki/tls/private/server.pem      
-      become: yes
-  when: inventory_hostname == MASTER_NAME
-      
-- name: Fetch pem file
-  fetch:
-    src: /etc/pki/tls/private/server.pem
-    dest: /tmp/ssl_nodes/{{ inventory_hostname }}/
-    flat: yes
-  delegate_to: "{{ MASTER_NAME }}"
+        cmd: cat "{{ SERVER_KEY_LOCATION }}{{ item }}/server.key" "{{ SERVER_CERT_LOCATION }}{{ item }}/server.crt" > /etc/pki/tls/private/{{ item }}/server.pem      
+
+    - name: Fetch pem file
+      fetch:
+        src: /etc/pki/tls/private/{{ item }}/server.pem
+        dest: /tmp/ssl_nodes/{{ MASTER_NAME }}/
+        flat: yes
   become: yes
-  run_once: yes  
+  when: inventory_hostname == MASTER_NAME
  
-- block:
-  - name: Copy pem to server
-    copy:
-      src: /tmp/ssl_nodes/{{ MASTER_NAME }}/server.pem
-      dest: /etc/pki/tls/private/
-  
-  - name: Delete master pem
-    local_action:
-      module: file
-      path: /tmp/ssl_nodes/{{ MASTER_NAME }}/server.pem
-      state: absent
-    run_once: yes
+- name: Copy pem to server
+  copy:
+    src: /tmp/ssl_nodes/{{ MASTER_NAME }}/server.pem
+    dest: "{{ SERVER_KEY_LOCATION }}{{ item }}/"
   become: yes
   when: inventory_hostname != MASTER_NAME
 
-- name: Trust cluster ca
-  include_role:
-    name: trust_ca
+- name: Delete master pem
+  local_action:
+    module: file
+    path: /tmp/ssl_nodes/{{ MASTER_NAME }}/server.pem
+    state: absent
+  run_once: yes

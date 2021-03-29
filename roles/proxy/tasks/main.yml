@@ -6,16 +6,9 @@
     - keepalived
   become: yes
   
-- import_tasks: ssl.yml
+- include_tasks: ssl.yml
+  with_items: "{{ DOMAINS | default(inventory_hostname) }}"
 
 - import_tasks: haproxy.yml
   
 - import_tasks: keepalived.yml
-
-- name: Add server to domain
-  include_role:
-    name: domain
-  
-- name: Add the cluster dns
-  include_role:
-    name: name_entry

@@ -54,9 +54,9 @@ SSLHonorCipherOrder on
 SSLCipherSuite PROFILE=SYSTEM
 SSLProxyCipherSuite PROFILE=SYSTEM
 
-SSLCertificateFile {{ SERVER_CERT_LOCATION }}
+SSLCertificateFile {{ SERVER_CERT_LOCATION }}/{{ inventory_hostname }}/server.crt
 
-SSLCertificateKeyFile {{ SERVER_KEY_LOCATION }}
+SSLCertificateKeyFile {{ SERVER_KEY_LOCATION }}/{{ inventory_hostname }}/server.key
 <FilesMatch "\.(cgi|shtml|phtml|php)$">
     SSLOptions +StdEnvVars
 </FilesMatch>

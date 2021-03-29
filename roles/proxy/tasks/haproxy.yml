@@ -1,10 +1,5 @@
 ---
 - block:
-  - name: Install haproxy
-    dnf:
-      name:
-      - haproxy
-
   - name: Configure haprxoy
     template:
       src: haproxy.cfg.j2
