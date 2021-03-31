@@ -1,0 +1,102 @@
+---
+- hosts: all
+  gather_facts: no
+  tasks:
+    - name: Create ssh directory
+      local_action:
+        module: file
+        path: /home/$USER/.ssh
+        state: directory
+        mode: '0755'
+      run_once: yes
+
+    - name: Create known hosts
+      local_action:
+        module: file
+        path: /home/$USER/.ssh/known_hosts
+        state: touch
+      run_once: yes
+
+    - name: Add to known hosts
+      local_action:
+        module: shell
+        cmd: ssh-keyscan -t rsa,dsa {{ inventory_hostname }} >> ~/.ssh/known_hosts && sort -u ~/.ssh/known_hosts > ~/.ssh/tmp_hosts && mv ~/.ssh/tmp_hosts ~/.ssh/known_hosts
+      throttle: 1
+
+    - name: Register username
+      local_action:
+        module: shell
+        cmd: echo $USER
+      run_once: yes
+      register: local_user
+
+    - name: Register user passwd
+      local_action:
+        module: shell
+        cmd: cat /etc/shadow | grep $USER | awk -F":" '{ print $2 }'
+      become: yes
+      run_once: yes
+      register: user_passwd
+
+    - name: Create user on remote node
+      user:
+        name: "{{ local_user.stdout }}"
+        password: "{{ user_passwd.stdout }}"
+      become: yes
+
+    - block:
+      - name: Create sudoers.d directory
+        file:
+          path: /etc/sudoers.d
+          state: directory
+          mode: '0755'
+
+      - name: Create sudoers.d file
+        file:
+          path: /etc/sudoers.d/{{ local_user.stdout }}
+          state: touch
+          mode: '0600'
+
+      - name: Add user to sudoers
+        lineinfile:
+          path: /etc/sudoers.d/{{ local_user.stdout }}
+          regexp: '^{{ local_user.stdout }}'
+          line: '{{ local_user.stdout }} ALL=(ALL) NOPASSWD:ALL'
+      become: yes
+
+    - name: Check if key pair exists
+      local_action:
+        module: stat
+        path: ~/.ssh/id_rsa
+      register: key
+
+    - name: Gen id_rsa key pair
+      local_action:
+        module: shell
+        cmd: ssh-keygen -t rsa -f ~/.ssh/id_rsa
+      when: key.stat.exists == False
+      run_once: yes
+
+    - name: Copy id_rsa
+      local_action:
+        module: shell
+        cmd: sshpass -p "{{ ansible_password }}" ssh-copy-id "{{ local_user.stdout }}"@"{{ inventory_hostname }}"
+
+    - block:
+      - name: Disallow root login
+        lineinfile:
+          path: /etc/ssh/sshd_config
+          regexp: '^PermitRootLogin'
+          line: 'PermitRootLogin no'
+
+      - name: Disallow password authentication
+        lineinfile:
+          path: /etc/ssh/sshd_config
+          regexp: '^PasswordAuthentication'
+          line: 'PasswordAuthentication no'
+
+      - name: Restart sshd
+        systemd:
+          name: sshd
+          state: restarted
+      become: yes
