@@ -59,7 +59,7 @@ while test $# -gt 0; do
     # Give the user sudo permissions
 
     ansible all -i $1 -m ansible.builtin.file -a "path=/etc/sudoers.d state=directory mode='0755'" -u $SSH_USER -e "ansible_password=$SSH_PASSWD" --become
-    ansible all -i $1 -m ansible.builtin.file -a "path=/etc/sudoers.d/$USER state=file mode='0660'" -u $SSH_USER -e "ansible_password=$SSH_PASSWD" --become
+    ansible all -i $1 -m ansible.builtin.file -a "path=/etc/sudoers.d/$USER state=touch mode='0660'" -u $SSH_USER -e "ansible_password=$SSH_PASSWD" --become
     ansible all -i $1 -m ansible.builtin.lineinfile -a "path=/etc/sudoers.d/$USER regexp='^gil' line='$USER ALL=(ALL) NOPASSWD: ALL'" -u $SSH_USER -e "ansible_password=$SSH_PASSWD" --become
 
     # Set ssh keypairs from user to inventory hosts, then disable password authentication and root login
